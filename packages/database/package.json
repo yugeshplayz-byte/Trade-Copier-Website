@@ -5,7 +5,8 @@
   "type": "module",
   "description": "PostgreSQL access: migrations, tenant-scoped transactions and repositories.",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./migrate": "./src/migrate.ts"
   },
   "dependencies": {
     "@tradecopier/contracts": "0.0.0",

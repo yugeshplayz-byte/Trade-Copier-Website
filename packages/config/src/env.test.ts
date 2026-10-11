@@ -22,8 +22,19 @@ describe('loadConfig', () => {
         logLevel: 'info',
         worker: { healthHost: '127.0.0.1', healthPort: 4100 },
         databaseUrl: undefined,
+        allowedOrigins: ['http://127.0.0.1:3000', 'http://localhost:3000'],
       },
     });
+  });
+
+  it('validates APP_ORIGIN: origin only, loopback locally, https remotely', () => {
+    expect(problemsFor({ APP_ENV: 'LOCAL', APP_ORIGIN: 'http://127.0.0.1:3000/app' })[0]).toMatch(/origin only/);
+    expect(problemsFor({ APP_ENV: 'LOCAL', APP_ORIGIN: 'http://example.com' })[0]).toMatch(/loopback/);
+    expect(problemsFor({ APP_ENV: 'STAGING', APP_ORIGIN: 'http://staging.example.com' })[0]).toMatch(/https/);
+    expect(problemsFor({ APP_ENV: 'STAGING' })).toEqual(['APP_ORIGIN: required for STAGING.']);
+    expect(problemsFor({ APP_ENV: 'LOCAL', APP_ORIGIN: 'nonsense' })[0]).toMatch(/valid origin/);
+    const staging = loadConfig({ APP_ENV: 'STAGING', APP_ORIGIN: 'https://staging.example.com' });
+    expect(staging.ok && staging.config.allowedOrigins).toEqual(['https://staging.example.com']);
   });
 
   it('requires an explicit APP_ENV', () => {

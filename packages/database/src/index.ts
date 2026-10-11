@@ -1,6 +1,5 @@
 export * from './errors.ts';
 export * from './pool.ts';
-export * from './migrate.ts';
 export * from './tenant.ts';
 export * from './users.ts';
 export * from './operations.ts';

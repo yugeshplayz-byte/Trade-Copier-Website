@@ -19,5 +19,7 @@ export default defineConfig({
     environment: 'node',
     // Worker smoke tests spawn real processes.
     testTimeout: 20_000,
+    // Database integration files share one test database; run files one at a time.
+    fileParallelism: false,
   },
 });

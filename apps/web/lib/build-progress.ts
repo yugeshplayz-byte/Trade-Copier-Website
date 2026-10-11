@@ -18,7 +18,7 @@ export const BUILD_PROGRESS: readonly PhaseProgress[] = [
     phase: 2,
     title: 'Identity, tenant database and control API',
     state: 'IN_PROGRESS',
-    note: 'Database, roles, tenant isolation and idempotent operations built; sign-in provider decision next.',
+    note: 'Database isolation and the authorized control API are built; connecting a sign-in provider is next.',
   },
   {
     phase: 3,

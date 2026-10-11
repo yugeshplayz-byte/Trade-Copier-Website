@@ -64,6 +64,21 @@ export async function publishRiskProfileVersion(
   return { version };
 }
 
+export interface RiskProfileSummary {
+  readonly id: string;
+  readonly name: string;
+  readonly currentVersion: number;
+  readonly createdAt: string;
+}
+
+/** Profiles visible to the current tenant context (row-level security filters the rest). */
+export async function listRiskProfiles(tx: Tx): Promise<RiskProfileSummary[]> {
+  const { rows } = await tx.query<{ id: string; name: string; current_version: number; created_at: Date }>(
+    'SELECT id, name, current_version, created_at FROM app.risk_profiles ORDER BY created_at, id LIMIT 200',
+  );
+  return rows.map((r) => ({ id: r.id, name: r.name, currentVersion: r.current_version, createdAt: r.created_at.toISOString() }));
+}
+
 export async function getRiskProfile(tx: Tx, profileId: string): Promise<RiskProfile> {
   if (!UUID.test(profileId)) throw new NotFoundError('risk profile not found');
   const profile = await tx.query<{ id: string; name: string; current_version: number }>(

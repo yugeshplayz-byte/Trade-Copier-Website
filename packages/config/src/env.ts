@@ -11,6 +11,8 @@ export interface AppConfig {
     readonly healthPort: number;
   };
   readonly databaseUrl: string | undefined;
+  /** Origins allowed to send state-changing requests to the control API. */
+  readonly allowedOrigins: readonly string[];
 }
 
 export type ConfigResult = { ok: true; config: AppConfig } | { ok: false; problems: string[] };
@@ -23,6 +25,7 @@ const schema = z.object({
   LOG_LEVEL: z.enum(['debug', 'info', 'warn', 'error']).default('info'),
   WORKER_HEALTH_PORT: z.coerce.number().int().min(1024).max(65535).default(4100),
   DATABASE_URL: z.string().min(1).optional(),
+  APP_ORIGIN: z.string().min(1).optional(),
 });
 
 /**
@@ -114,6 +117,8 @@ export function loadConfig(env: Env): ConfigResult {
     }
   }
 
+  const allowedOrigins = resolveAllowedOrigins(data.APP_ORIGIN, data.APP_ENV, problems);
+
   if (problems.length > 0) return { ok: false, problems };
 
   return {
@@ -124,6 +129,7 @@ export function loadConfig(env: Env): ConfigResult {
       logLevel: data.LOG_LEVEL,
       worker: { healthHost: '127.0.0.1', healthPort: data.WORKER_HEALTH_PORT },
       databaseUrl: data.DATABASE_URL,
+      allowedOrigins,
     },
   };
 }
@@ -147,4 +153,42 @@ function parseDatabaseUrl(url: string): { host: string; user: string } | null {
   } catch {
     return null;
   }
+}
+
+/**
+ * The control API accepts state-changing requests only from these origins
+ * (CSRF defence alongside SameSite cookies). Remote environments must use HTTPS.
+ * Locally, localhost and 127.0.0.1 name the same loopback server.
+ */
+function resolveAllowedOrigins(configured: string | undefined, appEnv: AppEnv, problems: string[]): string[] {
+  // PRODUCTION is refused earlier; do not pile origin problems on top.
+  if (appEnv === 'PRODUCTION') return [];
+  const local = appEnv === 'LOCAL' || appEnv === 'TEST';
+  if (configured === undefined && !local) {
+    problems.push(`APP_ORIGIN: required for ${appEnv}.`);
+    return [];
+  }
+  const appOrigin = configured ?? 'http://127.0.0.1:3000';
+  let url: URL;
+  try {
+    url = new URL(appOrigin);
+  } catch {
+    problems.push('APP_ORIGIN: not a valid origin URL.');
+    return [];
+  }
+  if (url.origin !== appOrigin.replace(/\/$/, '')) {
+    problems.push('APP_ORIGIN: must be an origin only (scheme, host and port), with no path.');
+    return [];
+  }
+  if (!local && url.protocol !== 'https:') {
+    problems.push(`APP_ORIGIN: ${appEnv} requires an https origin.`);
+    return [];
+  }
+  if (local && !LOOPBACK_HOSTS.has(url.hostname)) {
+    problems.push(`APP_ORIGIN: ${appEnv} must use a loopback host.`);
+    return [];
+  }
+  if (!local) return [url.origin];
+  const port = url.port ? `:${url.port}` : '';
+  return [...new Set([url.origin, `${url.protocol}//127.0.0.1${port}`, `${url.protocol}//localhost${port}`])];
 }

@@ -20,7 +20,9 @@ const contentSecurityPolicy = [
 const nextConfig: NextConfig = {
   poweredByHeader: false,
   reactStrictMode: true,
-  transpilePackages: ['@tradecopier/config', '@tradecopier/contracts', '@tradecopier/observability'],
+  transpilePackages: ['@tradecopier/config', '@tradecopier/contracts', '@tradecopier/database', '@tradecopier/observability'],
+  // node-postgres stays a server-side runtime dependency, never bundled for the browser.
+  serverExternalPackages: ['pg'],
   async headers() {
     return [
       {

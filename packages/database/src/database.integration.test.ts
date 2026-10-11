@@ -2,7 +2,6 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import {
   ConfigVersionConflictError,
   IdempotencyConflictError,
-  MigrationIntegrityError,
   NotFoundError,
   UnsafeDatabaseRoleError,
   assertRestrictedRuntimeRole,
@@ -10,14 +9,13 @@ import {
   createRiskProfile,
   executeIdempotent,
   getRiskProfile,
-  loadMigrations,
-  migrate,
   provisionUser,
   publishRiskProfileVersion,
   withTenant,
   type Pool,
   type ProvisionedUser,
 } from './index.ts';
+import { MigrationIntegrityError, loadMigrations, migrate } from './migrate.ts';
 
 /*
  * Integration tests against a real PostgreSQL test database, using the actual
