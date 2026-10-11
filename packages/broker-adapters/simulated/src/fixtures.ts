@@ -1,22 +1,8 @@
-import type { AccountRef, ContractSpec, InstrumentKey, PlaceOrder } from '@tradecopier/contracts';
+import type { AccountRef, PlaceOrder } from '@tradecopier/contracts';
+import { SIM_MNQ, SIM_MNQ_SPEC } from './catalog.ts';
 import { SimulatedBroker, type SimulatedBrokerOptions } from './simulator.ts';
 
-/** Synthetic contract for tests: a micro index future with a 0.25 tick. Not real market data. */
-export const SIM_MNQ: InstrumentKey = {
-  exchange: 'SIMEX',
-  product: 'MNQ',
-  expiry: '2026-12',
-  currency: 'USD',
-  providerContractId: 'SIM-MNQ-2026-12',
-};
-
-export const SIM_MNQ_SPEC: ContractSpec = {
-  instrument: SIM_MNQ,
-  tickSize: '0.25',
-  tickValue: '0.50',
-  lotIncrement: 1,
-  specVersion: 1,
-};
+export { SIM_MNQ, SIM_MNQ_SPEC };
 
 export const SIM_START = '2026-10-12T13:30:00.000Z';
 

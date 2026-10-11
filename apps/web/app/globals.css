@@ -1034,6 +1034,75 @@ code {
   color: var(--muted);
 }
 
+/* ---------- Connections ---------- */
+
+.connections__bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  margin-bottom: 16px;
+}
+
+.connections__hint {
+  font-size: 0.8125rem;
+}
+
+.connections__asof {
+  margin-top: 12px;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+}
+
+.connection {
+  padding: 16px 0;
+  border-top: 1px solid var(--line);
+}
+
+.connection__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 14px;
+  margin-bottom: 10px;
+}
+
+.connection__head h3 {
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
+
+.connection__meta {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  color: var(--muted);
+}
+
+.connection__reason {
+  font-size: 0.8125rem;
+}
+
+.form-error {
+  color: var(--danger-fg);
+  background: var(--danger-wash);
+  border-radius: var(--radius-control);
+  padding: 8px 12px;
+  font-size: 0.8125rem;
+}
+
+.table--compact {
+  min-width: 640px;
+}
+
+.table__sub {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 400;
+  color: var(--muted);
+}
+
 /* ---------- Standalone pages (refusal, 404, error) ---------- */
 
 .standalone {

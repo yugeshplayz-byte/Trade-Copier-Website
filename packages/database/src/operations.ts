@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto';
 import { IdempotencyConflictError } from './errors.ts';
 import type { Pool } from './pool.ts';
-import { withTenant, type TenantContext, type Tx } from './tenant.ts';
+import { withTenant, type Tx, type UserContext } from './tenant.ts';
 
 export interface OperationRequest {
   /** Client-supplied Idempotency-Key header value. */
@@ -48,7 +48,7 @@ export function requestHash(kind: string, payload: unknown): string {
  */
 export async function executeIdempotent<T>(
   pool: Pool,
-  ctx: TenantContext,
+  ctx: UserContext,
   request: OperationRequest,
   handler: (tx: Tx, operationId: string) => Promise<T>,
 ): Promise<OperationOutcome<T>> {

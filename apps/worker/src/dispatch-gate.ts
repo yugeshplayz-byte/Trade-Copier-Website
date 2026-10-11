@@ -57,7 +57,7 @@ export function evaluateDispatch(request: DispatchRequest): DispatchDecision {
 export function orderDispatchSummary(): { enabled: false; reason: string } {
   return {
     enabled: false,
-    reason: 'No broker order adapter is registered in this build. The simulator arrives in Phase 3; no real provider is approved.',
+    reason: 'No order adapter is registered for dispatch. Simulated order flow arrives with the durable execution slice (Phase 4); no real provider is approved.',
   };
 }
 

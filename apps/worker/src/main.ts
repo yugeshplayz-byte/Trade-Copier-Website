@@ -1,9 +1,46 @@
 import { loadConfig } from '@tradecopier/config';
-import { createLogger } from '@tradecopier/observability';
+import { assertRestrictedRuntimeRole, createPool, type Pool } from '@tradecopier/database';
+import { createLogger, type Logger } from '@tradecopier/observability';
+import { createConnectionSupervisor } from './connections.ts';
 import { createWorker } from './worker.ts';
 
 /** sysexits EX_CONFIG: refuse to start on unsafe or invalid configuration. */
 const EXIT_CONFIG = 78;
+/** How often the worker looks for connections to establish. */
+const CONNECTION_POLL_MS = 2_000;
+
+interface JobLoop {
+  stop(): Promise<void>;
+}
+
+/** Runs the connection supervisor on an interval without overlapping ticks. */
+async function startConnectionLoop(databaseUrl: string, logger: Logger): Promise<JobLoop> {
+  const pool: Pool = createPool({ connectionString: databaseUrl, applicationName: 'tradeplex-worker', max: 4 });
+  await assertRestrictedRuntimeRole(pool);
+  const supervisor = createConnectionSupervisor({ pool, logger: logger.child({ component: 'connections' }) });
+  await supervisor.recoverOnStartup();
+
+  let running = false;
+  let stopped = false;
+  const timer = setInterval(() => {
+    if (running || stopped) return;
+    running = true;
+    supervisor
+      .tick()
+      .catch((err: unknown) => logger.error('connection tick failed', { err }))
+      .finally(() => {
+        running = false;
+      });
+  }, CONNECTION_POLL_MS);
+
+  return {
+    async stop() {
+      stopped = true;
+      clearInterval(timer);
+      await pool.end();
+    },
+  };
+}
 
 async function main(): Promise<void> {
   const result = loadConfig(process.env);
@@ -19,9 +56,10 @@ async function main(): Promise<void> {
   const { config } = result;
   const logger = createLogger({ service: 'execution-worker', level: config.logLevel });
   const worker = createWorker({ config, logger });
+  let jobs: JobLoop | undefined;
 
   const shutdown = (signal: string): void => {
-    worker.stop(signal).then(
+    Promise.all([jobs?.stop(), worker.stop(signal)]).then(
       () => process.exit(0),
       (err: unknown) => {
         logger.error('shutdown failed', { err });
@@ -44,9 +82,16 @@ async function main(): Promise<void> {
 
   try {
     await worker.start();
+    if (config.databaseUrl) {
+      jobs = await startConnectionLoop(config.databaseUrl, logger);
+      logger.info('connection supervisor started', { pollMs: CONNECTION_POLL_MS });
+    } else {
+      logger.warn('no DATABASE_URL: connection supervisor not started');
+    }
   } catch (err) {
     logger.error('startup failed', { err });
     process.exitCode = 1;
+    await jobs?.stop();
     await worker.stop('startup failed');
   }
 }

@@ -51,10 +51,10 @@ export const PROVIDER_REGISTER: readonly ProviderEligibility[] = [
     name: 'Simulated broker',
     status: 'INTERNAL_TEST_ONLY',
     permittedEnvironments: ['SIMULATED'],
-    adapterImplemented: false,
+    adapterImplemented: true,
     classifications: [],
     summary:
-      'Deterministic simulator for proving copier invariants. It does not represent real execution quality or provider support. Planned for Phase 3.',
+      'Deterministic simulator for proving copier invariants. It never reaches a real broker and does not represent real execution quality.',
     sources: [],
   },
   {

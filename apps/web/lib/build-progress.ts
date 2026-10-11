@@ -23,10 +23,15 @@ export const BUILD_PROGRESS: readonly PhaseProgress[] = [
   {
     phase: 3,
     title: 'Adapter contracts and simulated broker',
-    state: 'IN_PROGRESS',
-    note: 'Contracts, tick math, simulator and conformance suite built; per-customer simulated connections are next.',
+    state: 'DONE',
+    note: 'Simulated connections are established by the worker; order dispatch stays off until P4.',
   },
-  { phase: 4, title: 'Durable execution with risk and reconciliation', state: 'LATER' },
+  {
+    phase: 4,
+    title: 'Durable execution with risk and reconciliation',
+    state: 'LATER',
+    note: 'Next up: copier groups, leader fill ledger, sizing, durable intents and dispatch to the simulator.',
+  },
   { phase: 5, title: 'Recovery and safety controls', state: 'LATER' },
   { phase: 6, title: 'Complete operational interface', state: 'LATER' },
 ];

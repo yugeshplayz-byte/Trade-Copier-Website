@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
 import { PROVIDER_EVIDENCE_REVIEWED_ON, PROVIDER_REGISTER, type ProviderStatus } from '@tradecopier/contracts';
+import { ConnectionsPanel } from '@/components/ConnectionsPanel.tsx';
 import { StatusBadge } from '@/components/StatusBadge.tsx';
+import { getServerConfig } from '@/lib/server-config.ts';
 import type { Tone } from '@/lib/worker-status-view.ts';
 
 export const metadata: Metadata = { title: 'Connections' };
@@ -12,20 +14,28 @@ const STATUS_VIEW: Record<ProviderStatus, { tone: Tone; label: string }> = {
 };
 
 export default function ConnectionsPage() {
+  const result = getServerConfig();
+  const authConfigured = result.ok && result.config.auth.configured;
   return (
     <>
       <header className="page-header">
         <div className="page-header__row">
           <h1>Connections</h1>
-          <StatusBadge tone="neutral">Connecting disabled</StatusBadge>
+          <StatusBadge tone="info">Simulator only</StatusBadge>
         </div>
-        <p className="page-header__meta">0 connections</p>
       </header>
 
-      <p className="lede">
-        No real broker provider is approved for this service, so real accounts cannot be connected. Simulated
-        connections arrive in P3.
-      </p>
+      <section className="section" aria-labelledby="yours-heading">
+        <div className="section__head">
+          <h2 id="yours-heading">Your connections</h2>
+          <span className="section__meta">Established by the execution worker</span>
+        </div>
+        {authConfigured ? (
+          <ConnectionsPanel />
+        ) : (
+          <p className="empty">Sign-in is not configured, so connections cannot be created.</p>
+        )}
+      </section>
 
       <section className="section" aria-labelledby="platforms-heading">
         <div className="section__head">

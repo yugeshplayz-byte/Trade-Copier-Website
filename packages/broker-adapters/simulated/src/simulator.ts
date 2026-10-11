@@ -46,6 +46,11 @@ export interface SimulatedBrokerOptions {
   readonly accounts: readonly SimulatedAccountConfig[];
   readonly contracts: readonly ContractSpec[];
   readonly connectionId?: string;
+  /**
+   * Scopes canonical account IDs (sim:<namespace>:<account>) so accounts from
+   * different connections can never collide. Persisted connections pass their ID.
+   */
+  readonly accountNamespace?: string;
   /** Broker-side submission deduplication by client order ID. Off by default: a resend creates a second order. */
   readonly deduplicateClientOrderIds?: boolean;
   /** Delay before an accepted order becomes visible to lookupCommand. */
@@ -119,7 +124,9 @@ export class SimulatedBroker implements BrokerAdapter {
     this.random = seededRandom(options.seed);
     this.connectionId = options.connectionId ?? 'sim-connection-1';
     for (const account of options.accounts) {
-      const canonicalAccountId = `sim:${account.providerAccountId}`;
+      const canonicalAccountId = options.accountNamespace
+        ? `sim:${options.accountNamespace}:${account.providerAccountId}`
+        : `sim:${account.providerAccountId}`;
       this.accounts.set(canonicalAccountId, {
         ref: {
           provider: 'simulated',

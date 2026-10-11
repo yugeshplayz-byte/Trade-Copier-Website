@@ -54,7 +54,7 @@ export default function OverviewPage() {
               <span className="readout__value">
                 <StatusBadge tone="neutral">Off</StatusBadge>
               </span>
-              <span className="readout__caption">No order adapter exists in this build.</span>
+              <span className="readout__caption">No adapter is registered for order dispatch until Phase 4.</span>
             </dd>
           </div>
           <div className="readout__cell">

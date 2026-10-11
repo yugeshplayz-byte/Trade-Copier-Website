@@ -1,7 +1,7 @@
 import type { Pool } from './pool.ts';
-import type { TenantContext } from './tenant.ts';
+import type { UserContext } from './tenant.ts';
 
-export interface ProvisionedUser extends TenantContext {
+export interface ProvisionedUser extends UserContext {
   readonly status: 'ACTIVE' | 'SUSPENDED' | 'DELETED';
 }
 

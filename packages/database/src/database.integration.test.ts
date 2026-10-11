@@ -5,6 +5,12 @@ import {
   NotFoundError,
   UnsafeDatabaseRoleError,
   assertRestrictedRuntimeRole,
+  claimConnectionWork,
+  createSimulatedConnection,
+  listConnections,
+  markConnectionsForReconnect,
+  recordDiscoveredAccounts,
+  setConnectionState,
   createPool,
   createRiskProfile,
   executeIdempotent,
@@ -69,7 +75,7 @@ describe.skipIf(!enabled)('database (integration)', () => {
     it('are idempotent on re-run', async () => {
       const report = await migrate(admin);
       expect(report.applied).toEqual([]);
-      expect(report.alreadyApplied).toEqual(['0001_tenancy.sql', '0002_resolve_user.sql']);
+      expect(report.alreadyApplied).toEqual(['0001_tenancy.sql', '0002_resolve_user.sql', '0003_broker_connections.sql']);
     });
 
     it('refuse an applied migration whose content changed', async () => {
@@ -179,6 +185,66 @@ describe.skipIf(!enabled)('database (integration)', () => {
           ),
         ).rejects.toSatisfy((e) => pgCode(e) === '23503');
       });
+    });
+  });
+
+  describe('broker connections', () => {
+    const FLAT = { positions: [], openOrders: 0, snapshotCursor: '0', snapshotAsOf: '2026-10-11T12:00:00.000Z' };
+
+    it('stores only simulator connections and isolates them per tenant', async () => {
+      const conn = await withTenant(app, alice, (tx) => createSimulatedConnection(tx, alice, 'Alice sim'));
+      expect(conn.state).toBe('CREATED');
+      expect(await withTenant(app, bob, (tx) => listConnections(tx))).toEqual([]);
+      await withTenant(app, alice, async (tx) => {
+        await tx.query('SAVEPOINT s');
+        await expect(
+          tx.query(
+            `INSERT INTO app.broker_connections (tenant_id, provider, environment, label, created_by)
+             VALUES ($1, 'tradovate', 'LIVE', 'real', $2)`,
+            [alice.tenantId, alice.userId],
+          ),
+        ).rejects.toSatisfy((e) => pgCode(e) === '23514');
+        await tx.query('ROLLBACK TO SAVEPOINT s');
+      });
+    });
+
+    it('keeps canonical account identity unique across tenants', async () => {
+      const a = await withTenant(app, alice, (tx) => createSimulatedConnection(tx, alice, 'Alice unique'));
+      const b = await withTenant(app, bob, (tx) => createSimulatedConnection(tx, bob, 'Bob unique'));
+      const account = { providerAccountId: 'SIM-LEADER-1', canonicalAccountId: 'sim:shared-canonical', displayName: 'x', ...FLAT };
+      await withTenant(app, alice, (tx) => recordDiscoveredAccounts(tx, alice, a.id, [account]));
+      await expect(withTenant(app, bob, (tx) => recordDiscoveredAccounts(tx, bob, b.id, [account]))).rejects.toSatisfy(
+        (e) => pgCode(e) === '23505',
+      );
+      const bobView = await withTenant(app, bob, (tx) => listConnections(tx));
+      expect(bobView.flatMap((c) => c.accounts)).toEqual([]);
+    });
+
+    it('records accounts idempotently per connection', async () => {
+      const c = await withTenant(app, alice, (tx) => createSimulatedConnection(tx, alice, 'Alice idempotent'));
+      const account = { providerAccountId: 'SIM-FOLLOWER-A', canonicalAccountId: `sim:${c.id}:SIM-FOLLOWER-A`, displayName: 'A', ...FLAT };
+      await withTenant(app, alice, (tx) => recordDiscoveredAccounts(tx, alice, c.id, [account]));
+      await withTenant(app, alice, (tx) => recordDiscoveredAccounts(tx, alice, c.id, [{ ...account, snapshotCursor: '7' }]));
+      const view = (await withTenant(app, alice, (tx) => listConnections(tx))).find((x) => x.id === c.id)!;
+      expect(view.accounts).toHaveLength(1);
+      expect(view.accounts[0]!.snapshotCursor).toBe('7');
+    });
+
+    it('gives concurrent claimers disjoint work and recovers connections after a restart', async () => {
+      await admin.query("UPDATE app.broker_connections SET state = 'DISCONNECTED'");
+      const ids: string[] = [];
+      for (let i = 0; i < 4; i++) ids.push((await withTenant(app, alice, (tx) => createSimulatedConnection(tx, alice, `Claim ${i}`))).id);
+      const [first, second] = await Promise.all([claimConnectionWork(app, 2), claimConnectionWork(app, 2)]);
+      const claimed = [...first!, ...second!].map((c) => c.connectionId);
+      expect(new Set(claimed).size).toBe(claimed.length);
+      expect(claimed.sort()).toEqual([...ids].sort());
+      expect(await claimConnectionWork(app, 5)).toEqual([]);
+
+      await withTenant(app, alice, (tx) => setConnectionState(tx, ids[0]!, 'READY', null, new Date()));
+      expect(await markConnectionsForReconnect(app)).toBeGreaterThanOrEqual(1);
+      const reclaimed = await claimConnectionWork(app, 10);
+      expect(reclaimed.map((c) => c.connectionId)).toContain(ids[0]);
+      expect(reclaimed.every((c) => c.userId === null)).toBe(true);
     });
   });
 

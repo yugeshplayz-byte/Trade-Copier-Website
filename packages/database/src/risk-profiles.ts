@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { ConfigVersionConflictError, NotFoundError } from './errors.ts';
-import type { TenantContext, Tx } from './tenant.ts';
+import type { TenantContext, Tx, UserContext } from './tenant.ts';
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -40,7 +40,7 @@ export async function createRiskProfile(tx: Tx, ctx: TenantContext, name: string
  */
 export async function publishRiskProfileVersion(
   tx: Tx,
-  ctx: TenantContext,
+  ctx: UserContext,
   input: { profileId: string; expectedVersion: number; limits: unknown },
 ): Promise<{ version: number }> {
   const limits = riskLimitsSchema.parse(input.limits);

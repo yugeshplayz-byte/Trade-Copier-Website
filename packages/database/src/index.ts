@@ -5,3 +5,4 @@ export * from './users.ts';
 export * from './operations.ts';
 export * from './risk-profiles.ts';
 export * from './operation-status.ts';
+export * from './connections.ts';

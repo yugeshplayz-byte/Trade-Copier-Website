@@ -2,9 +2,14 @@
 
 Server-side copier for a customer's own futures trades across their own authorized accounts. Specifications live in `docs/` (start with `docs/MASTER_SPEC.md` and `docs/ROADMAP.md`).
 
-**Current state:** Phases 0–2 are complete: the shell, the database with tenant isolation, sign-in through WorkOS AuthKit (staging), and the authorized control API.
+**Current state:** Phases 0–3 are complete:
 
-- **Phase 3 (in progress):** broker contracts, exact tick math, a deterministic simulated broker and an adapter conformance suite.
+- the app shell and the persistent execution worker;
+- the database with tenant isolation, and sign-in through WorkOS AuthKit (staging);
+- the authorized control API;
+- broker contracts, exact tick math, and a deterministic simulated broker whose connections the worker establishes per customer.
+
+Phase 4 (durable copy execution) is next.
 
 The build is simulator-only. There is no broker connection, and no order can be sent from the app. See `docs/REPO_AUDIT.md` and `docs/adr/`.
 
