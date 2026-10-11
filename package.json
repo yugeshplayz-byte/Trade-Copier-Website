@@ -8,7 +8,8 @@
   },
   "workspaces": [
     "apps/*",
-    "packages/*"
+    "packages/*",
+    "packages/broker-adapters/*"
   ],
   "scripts": {
     "dev": "node --env-file-if-exists=.env scripts/dev.mjs",

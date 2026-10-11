@@ -2,7 +2,7 @@
 
 Server-side copier for a customer's own futures trades across their own authorized accounts. Specifications live in `docs/` (start with `docs/MASTER_SPEC.md` and `docs/ROADMAP.md`).
 
-**Current state: Phase 1 development build.** It is simulator-only. There is no sign-in, no database, no broker connection, and no order can be sent. See `docs/REPO_AUDIT.md`.
+**Current state:** Phases 0–1 are complete, and Phase 3 is in progress: broker contracts, exact tick math, a deterministic simulated broker and an adapter conformance suite. Phase 2 (database and sign-in) is blocked on setup decisions. The build is simulator-only. There is no sign-in, no database, no broker connection, and no order can be sent from the app. See `docs/REPO_AUDIT.md` and `docs/adr/`.
 
 ## Layout
 
@@ -12,6 +12,8 @@ apps/worker         Persistent execution worker (runs without any browser)
 packages/config     Environment validation and startup guards
 packages/contracts  Shared types: environments, provider eligibility register, worker health schema
 packages/observability  Redaction and structured JSON logging
+packages/broker-adapters/simulated  Deterministic simulated broker with fault injection (test use only)
+tests/contracts     Provider-independent adapter conformance suite
 scripts/            Dev launcher, Next.js wrapper, artifact and secret verification
 docs/               Specifications, audit, ADRs, brand
 ```

@@ -9,8 +9,9 @@ import type { Tone } from '@/lib/worker-status-view.ts';
 export const metadata: Metadata = { title: 'Overview' };
 
 const PHASE_VIEW: Record<PhaseState, { tone: Tone; label: string }> = {
-  IN_REVIEW: { tone: 'info', label: 'In review' },
-  NEXT: { tone: 'warn', label: 'Next · blocked' },
+  DONE: { tone: 'ok', label: 'Done' },
+  IN_PROGRESS: { tone: 'info', label: 'In progress' },
+  BLOCKED: { tone: 'warn', label: 'Blocked' },
   LATER: { tone: 'neutral', label: 'Later' },
 };
 

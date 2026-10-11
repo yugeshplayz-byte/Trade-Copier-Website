@@ -3,7 +3,15 @@
   "compilerOptions": {
     "module": "nodenext",
     "moduleResolution": "nodenext",
-    "types": ["node"]
+    "types": [
+      "node"
+    ]
   },
-  "include": ["apps/worker/src", "packages/*/src", "vitest.config.ts"]
+  "include": [
+    "apps/worker/src",
+    "packages/*/src",
+    "packages/broker-adapters/*/src",
+    "tests",
+    "vitest.config.ts"
+  ]
 }

@@ -1,0 +1,13 @@
+{
+  "name": "@tradecopier/broker-simulated",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Deterministic simulated broker for proving copier invariants. Not a real broker; internal and test use only.",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@tradecopier/contracts": "0.0.0"
+  }
+}
