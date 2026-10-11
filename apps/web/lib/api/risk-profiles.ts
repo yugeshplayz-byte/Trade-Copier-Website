@@ -23,7 +23,7 @@ export interface ApiDeps {
 const createBody = z.object({ name: z.string().trim().min(1).max(100) }).strict();
 const publishBody = z.object({ expectedVersion: z.number().int().min(0), limits: riskLimitsSchema }).strict();
 
-async function requirePrincipal(deps: ApiDeps, request: Request): Promise<Principal> {
+export async function requirePrincipal(deps: ApiDeps, request: Request): Promise<Principal> {
   const principal = await deps.resolvePrincipal(request);
   if (!principal) throw new ApiError(401, 'unauthenticated', 'Sign in to continue.');
   return principal;

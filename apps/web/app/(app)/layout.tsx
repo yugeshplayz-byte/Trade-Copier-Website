@@ -1,10 +1,13 @@
+import { withAuth } from '@workos-inc/authkit-nextjs';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
+import { AccountMenu } from '@/components/AccountMenu.tsx';
 import { BrandLockup } from '@/components/BrandMark.tsx';
 import { PrimaryNav } from '@/components/PrimaryNav.tsx';
 import { WorkerStatusBadge, WorkerStatusProvider } from '@/components/WorkerStatus.tsx';
 import { SECTIONS } from '@/lib/sections.ts';
 import { getServerConfig } from '@/lib/server-config.ts';
+import { displayNameOf } from '@/lib/server/auth.ts';
 import { classifyWorkerHealth, probeWorker } from '@/lib/worker-health.ts';
 
 export default async function AppLayout({ children }: { children: ReactNode }) {
@@ -14,6 +17,9 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
 
   const probe = await probeWorker(config.worker.healthHost, config.worker.healthPort);
   const initialStatus = classifyWorkerHealth(probe, config.appEnv, new Date());
+  const authConfigured = config.auth.configured;
+  const user = authConfigured ? (await withAuth()).user : null;
+  const userName = user ? displayNameOf(user) || user.email : null;
   const navItems = SECTIONS.map((s) => ({ href: s.href, label: s.label, phaseTag: s.planned?.phaseTag ?? null }));
 
   return (
@@ -48,10 +54,15 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
             <span id="halt-note" className="sr-only">
               Unavailable: no copiers exist yet.
             </span>
+            {userName ? (
+              <AccountMenu name={userName} email={user?.email ?? null} />
+            ) : (
+              !authConfigured && <span className="session__off">Sign-in not configured</span>
+            )}
           </div>
         </header>
         <p className="notice">
-          <strong>Development build.</strong> No sign-in, no broker connection. Orders cannot be sent.
+          <strong>Development build.</strong> {authConfigured ? 'Simulator only, no broker connection.' : 'No sign-in, no broker connection.'} Orders cannot be sent.
         </p>
         <PrimaryNav items={navItems} />
         <main id="main" className="workspace" tabIndex={-1}>

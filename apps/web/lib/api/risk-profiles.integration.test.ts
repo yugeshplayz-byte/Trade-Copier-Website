@@ -3,8 +3,9 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createPool, provisionUser, type Pool } from '@tradecopier/database';
 import { migrate } from '@tradecopier/database/migrate';
 import type { Principal, PrincipalResolver } from './principal.ts';
+import { createOperationsApi } from './operations.ts';
 import { createRiskProfileApi } from './risk-profiles.ts';
-import { resolvePrincipal as productionResolver } from './principal.ts';
+import { noIdentityProvider } from './principal.ts';
 
 /*
  * API-level tenant isolation (ROADMAP Phase 2 acceptance: customer A cannot read
@@ -64,8 +65,8 @@ describe.skipIf(!enabled)('risk profile API (integration)', () => {
     await admin?.end();
   });
 
-  it('the production resolver authenticates nobody until an identity provider is connected', async () => {
-    const live = createRiskProfileApi({ pool: async () => app, resolvePrincipal: productionResolver, allowedOrigins: [ORIGIN] });
+  it('without an identity provider, nobody is authenticated', async () => {
+    const live = createRiskProfileApi({ pool: async () => app, resolvePrincipal: noIdentityProvider, allowedOrigins: [ORIGIN] });
     expect((await live.list(call('alice'))).status).toBe(401);
   });
 
@@ -136,6 +137,20 @@ describe.skipIf(!enabled)('risk profile API (integration)', () => {
       id,
     );
     expect(invalid.status).toBe(400);
+  });
+
+  it('exposes operation status only to the tenant that made the request', async () => {
+    const ops = createOperationsApi({ pool: async () => app, resolvePrincipal: testResolver, allowedOrigins: [ORIGIN] });
+    const created = await body(await api.create(call('alice', { method: 'POST', body: { name: 'Tracked' }, key: 'alice-create-4' })));
+    const operationId = created.operationId as string;
+
+    const own = await ops.get(call('alice'), operationId);
+    expect(own.status).toBe(200);
+    expect((await body(own)).operation).toMatchObject({ id: operationId, kind: 'risk_profile.create', status: 'SUCCEEDED' });
+
+    expect((await ops.get(call('bob'), operationId)).status).toBe(404);
+    expect((await ops.get(call(null), operationId)).status).toBe(401);
+    expect((await ops.get(call('alice'), 'not-a-uuid')).status).toBe(404);
   });
 
   it('returns 404, not 500, for malformed resource IDs', async () => {

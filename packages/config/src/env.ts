@@ -13,6 +13,8 @@ export interface AppConfig {
   readonly databaseUrl: string | undefined;
   /** Origins allowed to send state-changing requests to the control API. */
   readonly allowedOrigins: readonly string[];
+  /** Sign-in through WorkOS AuthKit. When not configured, nobody is authenticated. */
+  readonly auth: { readonly provider: 'WORKOS'; readonly configured: boolean };
 }
 
 export type ConfigResult = { ok: true; config: AppConfig } | { ok: false; problems: string[] };
@@ -118,6 +120,7 @@ export function loadConfig(env: Env): ConfigResult {
   }
 
   const allowedOrigins = resolveAllowedOrigins(data.APP_ORIGIN, data.APP_ENV, problems);
+  const authConfigured = resolveWorkosAuth(env, data.APP_ENV, allowedOrigins, problems);
 
   if (problems.length > 0) return { ok: false, problems };
 
@@ -130,6 +133,7 @@ export function loadConfig(env: Env): ConfigResult {
       worker: { healthHost: '127.0.0.1', healthPort: data.WORKER_HEALTH_PORT },
       databaseUrl: data.DATABASE_URL,
       allowedOrigins,
+      auth: { provider: 'WORKOS', configured: authConfigured },
     },
   };
 }
@@ -160,6 +164,43 @@ function parseDatabaseUrl(url: string): { host: string; user: string } | null {
  * (CSRF defence alongside SameSite cookies). Remote environments must use HTTPS.
  * Locally, localhost and 127.0.0.1 name the same loopback server.
  */
+/**
+ * WorkOS AuthKit settings (read by the SDK from the same variables). Sign-in is
+ * configured only when every piece is present and valid. This build accepts
+ * only WorkOS staging keys; production identity is a separate, later gate.
+ * Problems name variables but never echo values.
+ */
+function resolveWorkosAuth(env: Env, appEnv: AppEnv, allowedOrigins: readonly string[], problems: string[]): boolean {
+  const apiKey = env.WORKOS_API_KEY || undefined;
+  const clientId = env.WORKOS_CLIENT_ID || undefined;
+  const cookiePassword = env.WORKOS_COOKIE_PASSWORD || undefined;
+  const redirectUri = env.NEXT_PUBLIC_WORKOS_REDIRECT_URI || undefined;
+
+  if (!apiKey && !clientId) {
+    if (appEnv === 'STAGING') problems.push('WORKOS_API_KEY: sign-in must be configured for STAGING.');
+    return false;
+  }
+  const before = problems.length;
+  if (!apiKey) problems.push('WORKOS_API_KEY: required when WORKOS_CLIENT_ID is set.');
+  else if (!apiKey.startsWith('sk_test_')) problems.push('WORKOS_API_KEY: only WorkOS staging keys (sk_test_) are accepted in this build.');
+  if (!clientId) problems.push('WORKOS_CLIENT_ID: required when WORKOS_API_KEY is set.');
+  else if (!/^client_[A-Za-z0-9]+$/.test(clientId)) problems.push('WORKOS_CLIENT_ID: expected a value starting with client_.');
+  if (!cookiePassword || cookiePassword.length < 32) problems.push('WORKOS_COOKIE_PASSWORD: must be at least 32 characters.');
+  if (!redirectUri) {
+    problems.push('NEXT_PUBLIC_WORKOS_REDIRECT_URI: required for sign-in.');
+  } else {
+    try {
+      const url = new URL(redirectUri);
+      if (!allowedOrigins.includes(url.origin) || url.pathname !== '/callback') {
+        problems.push('NEXT_PUBLIC_WORKOS_REDIRECT_URI: must be /callback on the app origin.');
+      }
+    } catch {
+      problems.push('NEXT_PUBLIC_WORKOS_REDIRECT_URI: not a valid URL.');
+    }
+  }
+  return problems.length === before;
+}
+
 function resolveAllowedOrigins(configured: string | undefined, appEnv: AppEnv, problems: string[]): string[] {
   // PRODUCTION is refused earlier; do not pile origin problems on top.
   if (appEnv === 'PRODUCTION') return [];

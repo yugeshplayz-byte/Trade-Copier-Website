@@ -23,17 +23,69 @@ describe('loadConfig', () => {
         worker: { healthHost: '127.0.0.1', healthPort: 4100 },
         databaseUrl: undefined,
         allowedOrigins: ['http://127.0.0.1:3000', 'http://localhost:3000'],
+        auth: { provider: 'WORKOS', configured: false },
       },
     });
+  });
+
+  // Synthetic, obviously fake WorkOS values.
+  const WORKOS = {
+    WORKOS_API_KEY: 'sk_test_' + 'FAKEFAKEFAKE',
+    WORKOS_CLIENT_ID: 'client_FAKE123',
+    WORKOS_COOKIE_PASSWORD: 'x'.repeat(32),
+    NEXT_PUBLIC_WORKOS_REDIRECT_URI: 'http://localhost:3000/callback',
+  };
+
+  it('treats sign-in as configured only when every WorkOS setting is valid', () => {
+    const ok = loadConfig({ APP_ENV: 'LOCAL', ...WORKOS });
+    expect(ok.ok && ok.config.auth.configured).toBe(true);
+    const blank = loadConfig({ APP_ENV: 'LOCAL', WORKOS_API_KEY: '', WORKOS_CLIENT_ID: '' });
+    expect(blank.ok && blank.config.auth.configured).toBe(false);
+  });
+
+  it('refuses incomplete or unsafe WorkOS settings without echoing values', () => {
+    const partial = problemsFor({ APP_ENV: 'LOCAL', WORKOS_API_KEY: WORKOS.WORKOS_API_KEY });
+    expect(partial).toEqual(
+      expect.arrayContaining([
+        'WORKOS_CLIENT_ID: required when WORKOS_API_KEY is set.',
+        'WORKOS_COOKIE_PASSWORD: must be at least 32 characters.',
+        'NEXT_PUBLIC_WORKOS_REDIRECT_URI: required for sign-in.',
+      ]),
+    );
+    const live = problemsFor({ APP_ENV: 'LOCAL', ...WORKOS, WORKOS_API_KEY: 'sk_live_' + 'FAKEFAKEFAKE' });
+    expect(live).toContain('WORKOS_API_KEY: only WorkOS staging keys (sk_test_) are accepted in this build.');
+    expect(live.join('\n')).not.toContain('FAKEFAKEFAKE');
+    expect(problemsFor({ APP_ENV: 'LOCAL', ...WORKOS, NEXT_PUBLIC_WORKOS_REDIRECT_URI: 'https://evil.example/callback' })).toEqual([
+      'NEXT_PUBLIC_WORKOS_REDIRECT_URI: must be /callback on the app origin.',
+    ]);
+    expect(problemsFor({ APP_ENV: 'LOCAL', ...WORKOS, WORKOS_COOKIE_PASSWORD: 'short' })).toEqual([
+      'WORKOS_COOKIE_PASSWORD: must be at least 32 characters.',
+    ]);
+  });
+
+  it('requires sign-in to be configured in STAGING', () => {
+    expect(problemsFor({ APP_ENV: 'STAGING', APP_ORIGIN: 'https://staging.example.com' })).toEqual([
+      'WORKOS_API_KEY: sign-in must be configured for STAGING.',
+    ]);
   });
 
   it('validates APP_ORIGIN: origin only, loopback locally, https remotely', () => {
     expect(problemsFor({ APP_ENV: 'LOCAL', APP_ORIGIN: 'http://127.0.0.1:3000/app' })[0]).toMatch(/origin only/);
     expect(problemsFor({ APP_ENV: 'LOCAL', APP_ORIGIN: 'http://example.com' })[0]).toMatch(/loopback/);
     expect(problemsFor({ APP_ENV: 'STAGING', APP_ORIGIN: 'http://staging.example.com' })[0]).toMatch(/https/);
-    expect(problemsFor({ APP_ENV: 'STAGING' })).toEqual(['APP_ORIGIN: required for STAGING.']);
+    expect(problemsFor({ APP_ENV: 'STAGING' })).toEqual([
+      'APP_ORIGIN: required for STAGING.',
+      'WORKOS_API_KEY: sign-in must be configured for STAGING.',
+    ]);
     expect(problemsFor({ APP_ENV: 'LOCAL', APP_ORIGIN: 'nonsense' })[0]).toMatch(/valid origin/);
-    const staging = loadConfig({ APP_ENV: 'STAGING', APP_ORIGIN: 'https://staging.example.com' });
+    const staging = loadConfig({
+      APP_ENV: 'STAGING',
+      APP_ORIGIN: 'https://staging.example.com',
+      WORKOS_API_KEY: 'sk_test_' + 'FAKE',
+      WORKOS_CLIENT_ID: 'client_FAKE',
+      WORKOS_COOKIE_PASSWORD: 'y'.repeat(40),
+      NEXT_PUBLIC_WORKOS_REDIRECT_URI: 'https://staging.example.com/callback',
+    });
     expect(staging.ok && staging.config.allowedOrigins).toEqual(['https://staging.example.com']);
   });
 

@@ -17,14 +17,14 @@ export const BUILD_PROGRESS: readonly PhaseProgress[] = [
   {
     phase: 2,
     title: 'Identity, tenant database and control API',
-    state: 'IN_PROGRESS',
-    note: 'Database isolation and the authorized control API are built; connecting a sign-in provider is next.',
+    state: 'DONE',
+    note: 'Stream and export isolation is tested when those features arrive (P6); per-session MFA proof is still unverified.',
   },
   {
     phase: 3,
     title: 'Adapter contracts and simulated broker',
     state: 'IN_PROGRESS',
-    note: 'Contracts, tick math, simulator and conformance suite built; persistence waits for P2.',
+    note: 'Contracts, tick math, simulator and conformance suite built; per-customer simulated connections are next.',
   },
   { phase: 4, title: 'Durable execution with risk and reconciliation', state: 'LATER' },
   { phase: 5, title: 'Recovery and safety controls', state: 'LATER' },

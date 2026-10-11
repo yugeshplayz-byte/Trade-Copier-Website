@@ -2,12 +2,11 @@
 
 Server-side copier for a customer's own futures trades across their own authorized accounts. Specifications live in `docs/` (start with `docs/MASTER_SPEC.md` and `docs/ROADMAP.md`).
 
-**Current state:** Phases 0–1 are complete.
+**Current state:** Phases 0–2 are complete: the shell, the database with tenant isolation, sign-in through WorkOS AuthKit (staging), and the authorized control API.
 
-- **Phase 2 (in progress):** the database foundation is built. It has restricted roles, row-level tenant isolation, idempotent operations and versioned configuration. Sign-in is next.
 - **Phase 3 (in progress):** broker contracts, exact tick math, a deterministic simulated broker and an adapter conformance suite.
 
-The build is simulator-only. There is no sign-in yet, and no broker connection; no order can be sent from the app. See `docs/REPO_AUDIT.md` and `docs/adr/`.
+The build is simulator-only. There is no broker connection, and no order can be sent from the app. See `docs/REPO_AUDIT.md` and `docs/adr/`.
 
 ## Layout
 
@@ -58,6 +57,17 @@ cp .env.example .env
    ```bash
    npm run db:migrate
    ```
+
+### Sign-in (WorkOS AuthKit, staging)
+
+1. Create a free WorkOS account; you start in its Staging environment.
+2. Under **Redirects**, set:
+   - Redirect URI: `http://localhost:3000/callback`
+   - Sign-out URI: `http://localhost:3000/`
+   - Initiate login URI: `http://localhost:3000/login`
+3. Paste the staging API key (`sk_test_…`) and Client ID (`client_…`) into `.env`. Generate a 32+ character `WORKOS_COOKIE_PASSWORD`, and set `NEXT_PUBLIC_WORKOS_REDIRECT_URI` (see `.env.example`).
+
+Without these settings the app runs with sign-in off, and the control API answers 401.
 
 Integration tests reset and migrate `tradeplex_test` automatically. If the test URLs are missing, they are skipped with a warning; CI requires them.
 

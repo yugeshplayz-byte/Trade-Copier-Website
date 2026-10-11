@@ -296,6 +296,105 @@ code {
   gap: 14px;
 }
 
+/* Account menu: initials button disclosing identity, Settings and Sign out. */
+.account {
+  position: relative;
+}
+
+.account__button {
+  display: inline-grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-control);
+  border: 1px solid var(--line-strong);
+  background: var(--surface-sunk);
+  color: var(--ink);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition:
+    background-color 160ms var(--ease),
+    border-color 160ms var(--ease);
+}
+
+.account__button:hover,
+.account__button[aria-expanded='true'] {
+  border-color: var(--ink-2);
+}
+
+.account__menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  z-index: 30;
+  min-width: 232px;
+  max-width: min(320px, calc(100vw - 32px));
+  padding: 6px;
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-surface);
+  box-shadow: 0 8px 24px rgba(28, 25, 23, 0.08);
+}
+
+.account__identity {
+  padding: 8px 10px 10px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid var(--line);
+}
+
+.account__name {
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.account__email {
+  margin: 2px 0 0;
+  font-size: 0.75rem;
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.account__menu form {
+  margin: 0;
+}
+
+.account__item {
+  display: block;
+  width: 100%;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: var(--radius-control);
+  background: none;
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.875rem;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 160ms var(--ease);
+}
+
+.account__item:hover {
+  background: var(--surface-sunk);
+}
+
+.session__off {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
 .notice {
   grid-area: notice;
   margin: 0;
@@ -721,6 +820,16 @@ code {
 .meta-list dd {
   margin: 0;
   font-size: 0.875rem;
+}
+
+.meta-list--plain {
+  border-top: 0;
+  padding-top: 0;
+  max-width: 720px;
+}
+
+.settings__actions {
+  margin-top: 20px;
 }
 
 /* ---------- Glossary ---------- */

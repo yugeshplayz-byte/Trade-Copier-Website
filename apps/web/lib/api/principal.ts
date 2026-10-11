@@ -5,14 +5,15 @@
 export interface Principal {
   readonly userId: string;
   readonly tenantId: string;
+  /**
+   * Whether this session is known to have completed MFA. The identity provider
+   * enforces MFA by policy; until its session exposes proof per sign-in, this
+   * stays false (REQUIRES VERIFICATION) and live-capable actions must not rely on it.
+   */
   readonly mfaVerified: boolean;
 }
 
 export type PrincipalResolver = (request: Request) => Promise<Principal | null>;
 
-/**
- * No identity provider is connected yet (Phase 2b awaits the provider decision),
- * so nobody is authenticated and every protected route answers 401. This is
- * deliberate: there is no development bypass.
- */
-export const resolvePrincipal: PrincipalResolver = async () => null;
+/** Used when no identity provider is configured: nobody is authenticated, so every protected route answers 401. */
+export const noIdentityProvider: PrincipalResolver = async () => null;

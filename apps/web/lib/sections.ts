@@ -65,16 +65,7 @@ export const SECTIONS: readonly Section[] = [
       dependsOn: 'Approved plans; no prices are set.',
     },
   },
-  {
-    href: '/settings',
-    label: 'Settings',
-    planned: {
-      phaseTag: 'P2',
-      purpose: 'Profile, display timezone, sessions and MFA.',
-      deliveredIn: 'Phase 2',
-      dependsOn: 'Authentication provider selection and the tenant database.',
-    },
-  },
+  { href: '/settings', label: 'Settings' },
   { href: '/help', label: 'Help' },
 ];
 

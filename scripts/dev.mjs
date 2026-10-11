@@ -14,20 +14,25 @@ if (only && only !== 'web' && only !== 'worker') {
 }
 
 const env = { ...process.env, NEXT_TELEMETRY_DISABLED: '1' };
+// Least privilege: the worker never receives sign-in secrets or browser-public settings.
+const workerEnv = Object.fromEntries(
+  Object.entries(env).filter(([name]) => !name.startsWith('WORKOS_') && !name.startsWith('NEXT_PUBLIC_')),
+);
 const require = createRequire(join(root, 'apps', 'web', 'package.json'));
 
 const targets = {
-  worker: { cwd: join(root, 'apps', 'worker'), args: ['--watch', 'src/main.ts'] },
+  worker: { cwd: join(root, 'apps', 'worker'), args: ['--watch', 'src/main.ts'], env: workerEnv },
   web: {
     cwd: join(root, 'apps', 'web'),
     args: [require.resolve('next/dist/bin/next'), 'dev', '--hostname', '127.0.0.1', '--port', '3000'],
+    env,
   },
 };
 
 const children = new Map();
 for (const [name, target] of Object.entries(targets)) {
   if (only && only !== name) continue;
-  const child = spawn(process.execPath, target.args, { cwd: target.cwd, env, stdio: ['ignore', 'pipe', 'pipe'] });
+  const child = spawn(process.execPath, target.args, { cwd: target.cwd, env: target.env, stdio: ['ignore', 'pipe', 'pipe'] });
   const prefix = `[${name}] `;
   const pipe = (stream, out) => {
     let buffer = '';

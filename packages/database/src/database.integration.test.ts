@@ -11,6 +11,7 @@ import {
   getRiskProfile,
   provisionUser,
   publishRiskProfileVersion,
+  resolveUser,
   withTenant,
   type Pool,
   type ProvisionedUser,
@@ -68,7 +69,7 @@ describe.skipIf(!enabled)('database (integration)', () => {
     it('are idempotent on re-run', async () => {
       const report = await migrate(admin);
       expect(report.applied).toEqual([]);
-      expect(report.alreadyApplied).toContain('0001_tenancy.sql');
+      expect(report.alreadyApplied).toEqual(['0001_tenancy.sql', '0002_resolve_user.sql']);
     });
 
     it('refuse an applied migration whose content changed', async () => {
@@ -106,6 +107,12 @@ describe.skipIf(!enabled)('database (integration)', () => {
       const again = await provisionUser(app, 'test|alice', 'Alice');
       expect(again).toEqual(alice);
       expect(bob.tenantId).not.toBe(alice.tenantId);
+    });
+
+    it('resolves known identities read-only and returns null for unknown ones', async () => {
+      expect(await resolveUser(app, 'test|alice')).toEqual(alice);
+      expect(await resolveUser(app, 'test|nobody')).toBeNull();
+      expect(await resolveUser(app, '')).toBeNull();
     });
 
     it('is safe under concurrent first sign-ins', async () => {
