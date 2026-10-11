@@ -6,3 +6,4 @@ export * from './operations.ts';
 export * from './risk-profiles.ts';
 export * from './operation-status.ts';
 export * from './connections.ts';
+export * from './copier-groups.ts';

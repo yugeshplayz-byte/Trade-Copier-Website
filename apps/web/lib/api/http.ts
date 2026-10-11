@@ -3,6 +3,7 @@ import {
   ConfigVersionConflictError,
   IdempotencyConflictError,
   NotFoundError,
+  StateConflictError,
   UnsafeDatabaseRoleError,
 } from '@tradecopier/database';
 import { createLogger } from '@tradecopier/observability';
@@ -55,6 +56,7 @@ export async function handle(fn: () => Promise<Response>): Promise<Response> {
       });
     }
     if (err instanceof NotFoundError) return problem(404, 'not_found', 'Not found.');
+    if (err instanceof StateConflictError) return problem(409, 'state_conflict', err.message);
     if (err instanceof UnsafeDatabaseRoleError) {
       logger.error('database role check failed', { err });
       return problem(503, 'database_unavailable', 'The service is temporarily unavailable.');

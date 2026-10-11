@@ -75,7 +75,7 @@ describe.skipIf(!enabled)('database (integration)', () => {
     it('are idempotent on re-run', async () => {
       const report = await migrate(admin);
       expect(report.applied).toEqual([]);
-      expect(report.alreadyApplied).toEqual(['0001_tenancy.sql', '0002_resolve_user.sql', '0003_broker_connections.sql']);
+      expect(report.alreadyApplied).toEqual(loadMigrations().map((m) => m.name));
     });
 
     it('refuse an applied migration whose content changed', async () => {

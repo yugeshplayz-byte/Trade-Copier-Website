@@ -29,8 +29,8 @@ export const BUILD_PROGRESS: readonly PhaseProgress[] = [
   {
     phase: 4,
     title: 'Durable execution with risk and reconciliation',
-    state: 'LATER',
-    note: 'Next up: copier groups, leader fill ledger, sizing, durable intents and dispatch to the simulator.',
+    state: 'IN_PROGRESS',
+    note: 'Copy logic and copier activation are built; next: durable intents and the first simulated follower orders.',
   },
   { phase: 5, title: 'Recovery and safety controls', state: 'LATER' },
   { phase: 6, title: 'Complete operational interface', state: 'LATER' },

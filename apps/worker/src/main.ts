@@ -1,6 +1,7 @@
 import { loadConfig } from '@tradecopier/config';
 import { assertRestrictedRuntimeRole, createPool, type Pool } from '@tradecopier/database';
 import { createLogger, type Logger } from '@tradecopier/observability';
+import { createActivationProcessor } from './activation.ts';
 import { createConnectionSupervisor } from './connections.ts';
 import { createWorker } from './worker.ts';
 
@@ -13,12 +14,17 @@ interface JobLoop {
   stop(): Promise<void>;
 }
 
-/** Runs the connection supervisor on an interval without overlapping ticks. */
+/** Runs the connection supervisor, then activation preflights, on an interval without overlapping ticks. */
 async function startConnectionLoop(databaseUrl: string, logger: Logger): Promise<JobLoop> {
   const pool: Pool = createPool({ connectionString: databaseUrl, applicationName: 'tradeplex-worker', max: 4 });
   await assertRestrictedRuntimeRole(pool);
   const supervisor = createConnectionSupervisor({ pool, logger: logger.child({ component: 'connections' }) });
   await supervisor.recoverOnStartup();
+  const activations = createActivationProcessor({
+    pool,
+    logger: logger.child({ component: 'activation' }),
+    sessions: supervisor.sessions,
+  });
 
   let running = false;
   let stopped = false;
@@ -27,7 +33,8 @@ async function startConnectionLoop(databaseUrl: string, logger: Logger): Promise
     running = true;
     supervisor
       .tick()
-      .catch((err: unknown) => logger.error('connection tick failed', { err }))
+      .then(() => activations.tick())
+      .catch((err: unknown) => logger.error('worker tick failed', { err }))
       .finally(() => {
         running = false;
       });

@@ -23,3 +23,8 @@ export class NotFoundError extends Error {
 export class UnsafeDatabaseRoleError extends Error {
   override readonly name = 'UnsafeDatabaseRoleError';
 }
+
+/** The resource is in a state that does not allow this action: maps to HTTP 409. */
+export class StateConflictError extends Error {
+  override readonly name = 'StateConflictError';
+}

@@ -13,6 +13,7 @@
     "@tradecopier/config": "0.0.0",
     "@tradecopier/contracts": "0.0.0",
     "@tradecopier/database": "0.0.0",
+    "@tradecopier/domain": "0.0.0",
     "@tradecopier/observability": "0.0.0"
   }
 }

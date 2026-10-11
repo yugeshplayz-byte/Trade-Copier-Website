@@ -1103,6 +1103,99 @@ code {
   color: var(--muted);
 }
 
+/* ---------- Copiers ---------- */
+
+.copier__members {
+  margin-top: 8px;
+}
+
+.copier-form {
+  margin-top: 28px;
+  padding: 18px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-surface);
+  display: grid;
+  gap: 14px;
+  max-width: 820px;
+}
+
+.copier-form h3 {
+  margin: 0;
+  font-size: 0.9375rem;
+}
+
+.copier-form__note {
+  font-size: 0.8125rem;
+}
+
+.field {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  font-size: 0.875rem;
+}
+
+.field > span,
+.field > legend {
+  font-weight: 600;
+  font-size: 0.8125rem;
+  padding: 0;
+  margin-bottom: 4px;
+}
+
+.field input,
+.field select,
+.follower-row select,
+.follower-row input {
+  font: inherit;
+  font-size: 0.875rem;
+  color: var(--ink);
+  background: var(--canvas);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-control);
+  padding: 7px 10px;
+  max-width: 420px;
+}
+
+.follower-row {
+  padding: 10px 0;
+  border-top: 1px solid var(--line);
+}
+
+.follower-row__pick {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.follower-row__settings {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 10px 16px;
+  margin: 10px 0 0 26px;
+  font-size: 0.8125rem;
+}
+
+.follower-row__settings label {
+  display: grid;
+  gap: 4px;
+  color: var(--muted);
+}
+
+.follower-row__settings input {
+  width: 88px;
+}
+
+.follower-row__preview {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
 /* ---------- Standalone pages (refusal, 404, error) ---------- */
 
 .standalone {

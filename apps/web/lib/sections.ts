@@ -14,24 +14,15 @@ export interface Section {
 /** Primary app navigation (FRONTEND.md product hierarchy). */
 export const SECTIONS: readonly Section[] = [
   { href: '/overview', label: 'Overview' },
-  {
-    href: '/copiers',
-    label: 'Copiers',
-    planned: {
-      phaseTag: 'P3–4',
-      purpose: 'Create and operate copier groups: one leader, its followers, sizing rules, pause, halt and flatten.',
-      deliveredIn: 'Phases 3–4 (simulated engine), Phase 6 (full interface)',
-      dependsOn: 'Tenant database, simulated broker and the durable execution slice.',
-    },
-  },
+  { href: '/copiers', label: 'Copiers' },
   {
     href: '/accounts',
     label: 'Accounts',
     planned: {
-      phaseTag: 'P3',
-      purpose: 'Inspect each account’s broker-reported positions, orders, balance and freshness.',
-      deliveredIn: 'Phase 3 (simulated accounts)',
-      dependsOn: 'Adapter contracts and the simulated broker.',
+      phaseTag: 'P6',
+      purpose: 'Inspect each account’s broker-reported positions, orders, balance and freshness in one place. Simulated accounts are listed under Connections today.',
+      deliveredIn: 'Phase 6 (complete operational interface)',
+      dependsOn: 'Reconciliation and live account projections from Phase 4.',
     },
   },
   { href: '/connections', label: 'Connections' },

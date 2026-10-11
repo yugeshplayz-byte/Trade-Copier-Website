@@ -10,9 +10,11 @@
     "start": "next start --hostname 127.0.0.1 --port 3000"
   },
   "dependencies": {
+    "@tradecopier/broker-simulated": "0.0.0",
     "@tradecopier/config": "0.0.0",
     "@tradecopier/contracts": "0.0.0",
     "@tradecopier/database": "0.0.0",
+    "@tradecopier/domain": "0.0.0",
     "@tradecopier/observability": "0.0.0",
     "@workos-inc/authkit-nextjs": "4.3.2",
     "@workos-inc/node": "10.14.0",
