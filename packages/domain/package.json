@@ -1,0 +1,13 @@
+{
+  "name": "@tradecopier/domain",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Pure copier domain: sizing, leader fill ledger and follower order planning. No I/O.",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@tradecopier/contracts": "0.0.0"
+  }
+}
