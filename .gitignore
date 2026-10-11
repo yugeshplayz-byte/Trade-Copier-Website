@@ -1,2 +1,21 @@
 
 .agents/skills/
+# Local Claude Code skill links (local-only tooling; never track)
+.claude/skills/
+
+# Dependencies and build output
+node_modules/
+.next/
+next-env.d.ts
+dist/
+coverage/
+*.tsbuildinfo
+
+# Environment and secrets (only the placeholder template is tracked)
+.env
+.env.*
+!.env.example
+
+# OS / editor noise
+.DS_Store
+Thumbs.db

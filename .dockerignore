@@ -1,0 +1,14 @@
+# Explicit exclusions for any container build context.
+.agents
+.claude
+.git
+.github
+.env
+.env.*
+!.env.example
+node_modules
+**/node_modules
+**/.next
+coverage
+docs
+*.log

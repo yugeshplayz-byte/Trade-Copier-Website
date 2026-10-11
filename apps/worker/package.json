@@ -1,0 +1,16 @@
+{
+  "name": "@tradecopier/worker",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Persistent execution worker. Runs independently of any browser session.",
+  "scripts": {
+    "start": "node src/main.ts",
+    "dev": "node --watch src/main.ts"
+  },
+  "dependencies": {
+    "@tradecopier/config": "0.0.0",
+    "@tradecopier/contracts": "0.0.0",
+    "@tradecopier/observability": "0.0.0"
+  }
+}

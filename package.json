@@ -1,0 +1,34 @@
+{
+  "name": "tradecopier",
+  "private": true,
+  "description": "Futures trade copier: control web app and persistent execution worker (simulator-only build).",
+  "type": "module",
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "node --env-file-if-exists=.env scripts/dev.mjs",
+    "dev:web": "node --env-file-if-exists=.env scripts/dev.mjs web",
+    "dev:worker": "node --env-file-if-exists=.env scripts/dev.mjs worker",
+    "build": "node scripts/next.mjs build",
+    "start:web": "node --env-file-if-exists=.env scripts/next.mjs start --hostname 127.0.0.1 --port 3000",
+    "start:worker": "node --env-file-if-exists=.env apps/worker/src/main.ts",
+    "lint": "eslint .",
+    "typecheck": "tsc -p tsconfig.json && tsc -p apps/web/tsconfig.json",
+    "test": "vitest run",
+    "verify:artifacts": "node scripts/verify-artifacts.mjs",
+    "check": "npm run lint && npm run typecheck && npm run test && npm run build && npm run verify:artifacts"
+  },
+  "devDependencies": {
+    "@types/node": "24.19.0",
+    "eslint": "9.39.5",
+    "eslint-config-next": "16.3.8",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.70.1",
+    "vitest": "4.1.11"
+  }
+}
