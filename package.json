@@ -22,7 +22,10 @@
     "typecheck": "tsc -p tsconfig.json && tsc -p apps/web/tsconfig.json",
     "test": "vitest run",
     "verify:artifacts": "node scripts/verify-artifacts.mjs",
-    "check": "npm run lint && npm run typecheck && npm run test && npm run build && npm run verify:artifacts"
+    "check": "npm run lint && npm run typecheck && npm run test && npm run build && npm run verify:artifacts",
+    "db:bootstrap": "node scripts/db/bootstrap.mjs",
+    "db:migrate": "node --env-file-if-exists=.env --env-file-if-exists=.env.db-admin packages/database/src/cli/migrate.ts",
+    "db:migrate:test": "node --env-file-if-exists=.env --env-file-if-exists=.env.db-admin packages/database/src/cli/migrate.ts --test"
   },
   "devDependencies": {
     "@types/node": "24.19.0",

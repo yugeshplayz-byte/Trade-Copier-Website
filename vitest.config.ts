@@ -1,4 +1,10 @@
+import { existsSync } from 'node:fs';
 import { defineConfig } from 'vitest/config';
+
+// Local database URLs for integration tests come from git-ignored env files when present.
+for (const file of ['.env', '.env.db-admin']) {
+  if (existsSync(file)) process.loadEnvFile(file);
+}
 
 export default defineConfig({
   test: {

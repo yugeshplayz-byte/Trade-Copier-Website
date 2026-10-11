@@ -17,8 +17,8 @@ export const BUILD_PROGRESS: readonly PhaseProgress[] = [
   {
     phase: 2,
     title: 'Identity, tenant database and control API',
-    state: 'BLOCKED',
-    note: 'Needs local PostgreSQL and an authentication provider decision.',
+    state: 'IN_PROGRESS',
+    note: 'Database, roles, tenant isolation and idempotent operations built; sign-in provider decision next.',
   },
   {
     phase: 3,

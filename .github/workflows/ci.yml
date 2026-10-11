@@ -16,8 +16,28 @@ jobs:
   verify:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+
+    # Ephemeral database for integration tests. These passwords protect nothing
+    # beyond this throwaway container and are not secrets.
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_PASSWORD: ci_only_superuser
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+
     env:
       NEXT_TELEMETRY_DISABLED: '1'
+      REQUIRE_DB_TESTS: '1'
+      TEST_DATABASE_URL: postgres://tradeplex_app:ci_only_app@127.0.0.1:5432/tradeplex_test
+      TEST_MIGRATION_DATABASE_URL: postgres://tradeplex_migrator:ci_only_migrator@127.0.0.1:5432/tradeplex_test
+
     steps:
       - uses: actions/checkout@v4
         with:
@@ -34,13 +54,18 @@ jobs:
       - name: Artifact and secret checks (source)
         run: npm run verify:artifacts
 
+      - name: Create database roles
+        run: node scripts/db/bootstrap.mjs
+        env:
+          PGPASSWORD: ci_only_superuser
+
       - name: Lint
         run: npm run lint
 
       - name: Typecheck
         run: npm run typecheck
 
-      - name: Tests
+      - name: Tests (including database integration)
         run: npm test
 
       - name: Build

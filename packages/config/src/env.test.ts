@@ -79,6 +79,30 @@ describe('loadConfig', () => {
     expect(problemsFor({ APP_ENV: 'TEST', DATABASE_URL: 'not a url' })).toEqual([
       'DATABASE_URL: not a valid connection URL.',
     ]);
+    expect(problemsFor({ APP_ENV: 'TEST', DATABASE_URL: 'mysql://app@localhost/tc' })).toEqual([
+      'DATABASE_URL: not a valid connection URL.',
+    ]);
+  });
+
+  it('applies the loopback rule to migration and test database URLs too', () => {
+    const problems = problemsFor({
+      APP_ENV: 'LOCAL',
+      MIGRATION_DATABASE_URL: 'postgres://tradeplex_migrator@db.example.com/tc',
+      TEST_DATABASE_URL: 'postgres://tradeplex_app@10.0.0.5/tc_test',
+    });
+    expect(problems).toEqual([
+      'MIGRATION_DATABASE_URL: LOCAL may only use a loopback database host.',
+      'TEST_DATABASE_URL: LOCAL may only use a loopback database host.',
+    ]);
+  });
+
+  it('refuses superuser connections in every database URL without echoing passwords', () => {
+    const url = 'postgres://postgres:' + FAKE_SECRET + '@127.0.0.1:5432/tc';
+    for (const name of ['DATABASE_URL', 'MIGRATION_DATABASE_URL', 'TEST_DATABASE_URL']) {
+      const problems = problemsFor({ APP_ENV: 'LOCAL', [name]: url });
+      expect(problems).toEqual([`${name}: must use a restricted role, never a database superuser.`]);
+      expect(problems.join('\n')).not.toContain(FAKE_SECRET);
+    }
   });
 
   it('validates the worker health port range', () => {

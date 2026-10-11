@@ -48,6 +48,12 @@ const LIVE_PAYMENT_KEY = /\b(?:sk|rk|pk)_live_[A-Za-z0-9]+/;
 
 const LOOPBACK_HOSTS = new Set(['localhost', '127.0.0.1', '[::1]', '::1']);
 
+/** Database connection variables checked by the guard. Only DATABASE_URL reaches app config. */
+const DATABASE_URL_NAMES = ['DATABASE_URL', 'MIGRATION_DATABASE_URL', 'TEST_DATABASE_URL', 'TEST_MIGRATION_DATABASE_URL'] as const;
+
+/** Default superuser names. The database package also checks the live role's attributes at connect time. */
+const SUPERUSER_NAMES = new Set(['postgres', 'root', 'rdsadmin', 'azure_superuser', 'cloudsqladmin']);
+
 /**
  * Validates process configuration and applies startup guards. Problems name the
  * offending variable but never echo its value, so the output is safe to log.
@@ -92,12 +98,19 @@ export function loadConfig(env: Env): ConfigResult {
     }
   }
 
-  if (data.DATABASE_URL !== undefined && (data.APP_ENV === 'LOCAL' || data.APP_ENV === 'TEST')) {
-    const host = databaseHost(data.DATABASE_URL);
-    if (host === null) {
-      problems.push('DATABASE_URL: not a valid connection URL.');
-    } else if (!LOOPBACK_HOSTS.has(host)) {
-      problems.push(`DATABASE_URL: ${data.APP_ENV} may only use a loopback database host.`);
+  for (const name of DATABASE_URL_NAMES) {
+    const url = env[name];
+    if (!url) continue;
+    const parsedUrl = parseDatabaseUrl(url);
+    if (parsedUrl === null) {
+      problems.push(`${name}: not a valid connection URL.`);
+      continue;
+    }
+    if ((data.APP_ENV === 'LOCAL' || data.APP_ENV === 'TEST') && !LOOPBACK_HOSTS.has(parsedUrl.host)) {
+      problems.push(`${name}: ${data.APP_ENV} may only use a loopback database host.`);
+    }
+    if (SUPERUSER_NAMES.has(parsedUrl.user)) {
+      problems.push(`${name}: must use a restricted role, never a database superuser.`);
     }
   }
 
@@ -126,9 +139,11 @@ function describeIssue(name: string, issue: z.core.$ZodIssue): string {
   return issue.message;
 }
 
-function databaseHost(url: string): string | null {
+function parseDatabaseUrl(url: string): { host: string; user: string } | null {
   try {
-    return new URL(url).hostname.toLowerCase();
+    const parsed = new URL(url);
+    if (parsed.protocol !== 'postgres:' && parsed.protocol !== 'postgresql:') return null;
+    return { host: parsed.hostname.toLowerCase(), user: decodeURIComponent(parsed.username).toLowerCase() };
   } catch {
     return null;
   }
